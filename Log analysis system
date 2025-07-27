@@ -1,0 +1,60 @@
+import os
+from collections import Counter
+
+MAX_FILE_SIZE_MB = 100
+
+def is_file_size_valid(file_path):
+    size_mb = os.path.getsize(file_path) / (1024 * 1024)
+    return size_mb <= MAX_FILE_SIZE_MB
+
+def parse_log_line(line):
+    try:
+        parts = line.split()
+        ip = parts[0]
+        url = parts[6]
+        code = parts[8]
+        return ip, url, code
+    except IndexError:
+        return None, None, None  # Skip malformed lines
+
+def analyze_log(file_path):
+    # Check file existence
+    if not os.path.exists(file_path):
+        print("❌ File not found.")
+        return
+
+    # Check file size
+    if not is_file_size_valid(file_path):
+        print("❌ File exceeds 100 MB size limit.")
+        return
+
+    ip_counter = Counter()
+    url_counter = Counter()
+    code_counter = Counter()
+
+    # Read and analyze log file
+    with open(file_path, 'r') as file:
+        for line in file:
+            ip, url, code = parse_log_line(line)
+            if ip and url and code:
+                ip_counter[ip] += 1
+                url_counter[url] += 1
+                code_counter[code] += 1
+
+    # Display Results
+    print("\n✅ Log Analysis Report")
+
+    print("\n🔸 Top 5 IP Addresses:")
+    for ip, count in ip_counter.most_common(5):
+        print(f"{ip} - {count} times")
+
+    print("\n🔸 Top 5 URLs Accessed:")
+    for url, count in url_counter.most_common(5):
+        print(f"{url} - {count} times")
+
+    print("\n🔸 Response Code Summary:")
+    for code, count in code_counter.items():
+        print(f"{code} - {count} times")
+
+file_path = input("Enter the path to the log file: ")
+analyze_log(file_path)
